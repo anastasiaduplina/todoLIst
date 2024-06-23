@@ -81,7 +81,6 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Container(
-              // color: Theme.of(context).cardTheme.color,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -90,7 +89,7 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
                     color: Theme.of(context).shadowColor.withOpacity(0.5),
                     spreadRadius: 0,
                     blurRadius: 5,
-                    offset: const Offset(0, 3), // changes position of shadow
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),

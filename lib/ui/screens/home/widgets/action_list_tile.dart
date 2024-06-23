@@ -123,7 +123,7 @@ class _ActionTileState extends ConsumerState<ActionTile> {
                     : const SizedBox.shrink(),
                 Flexible(
                   child: Text(
-                    widget.action.text, //todo
+                    widget.action.text,
                     style: (widget.action.done && widget.eyeON)
                         ? Theme.of(context).textTheme.bodyLarge?.copyWith(
                               decoration: TextDecoration.lineThrough,
