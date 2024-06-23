@@ -100,7 +100,10 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
                       controller: scrollController,
                       shrinkWrap: true,
                       itemBuilder: (BuildContext context, int index) {
-                        return ActionTile(action: items[index], eyeON: eyeON);
+                        if ((!eyeON && items[index].done)) {
+                          return const SizedBox.shrink();
+                        }
+                        return ActionTile(action: items[index]);
                       }),
                   SingleChildScrollView(
                     padding: EdgeInsets.only(

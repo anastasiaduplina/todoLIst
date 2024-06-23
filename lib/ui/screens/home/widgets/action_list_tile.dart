@@ -11,10 +11,8 @@ class ActionTile extends ConsumerStatefulWidget {
   const ActionTile({
     super.key,
     required this.action,
-    required this.eyeON,
   });
 
-  final bool eyeON;
   final ActionToDo action;
 
   @override
@@ -100,7 +98,7 @@ class _ActionTileState extends ConsumerState<ActionTile> {
         titleAlignment: ListTileTitleAlignment.top,
         leading: Checkbox(
           activeColor: Colors.green,
-          value: widget.action.done && widget.eyeON,
+          value: widget.action.done,
           side: BorderSide(
               color: getImportanceColor(widget.action.importance), width: 2),
           onChanged: (bool? value) {
@@ -124,7 +122,7 @@ class _ActionTileState extends ConsumerState<ActionTile> {
                 Flexible(
                   child: Text(
                     widget.action.text,
-                    style: (widget.action.done && widget.eyeON)
+                    style: widget.action.done
                         ? Theme.of(context).textTheme.bodyLarge?.copyWith(
                               decoration: TextDecoration.lineThrough,
                               color: Colors.grey,
