@@ -1,28 +1,36 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+  rules:
+    - camel_case_types
+    - empty_catches
+    - prefer_const_constructors
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_fields
+    - use_rethrow_when_possible
+    - avoid_web_libraries_in_flutter
+    - non_constant_identifier_names
+    - unrelated_type_equality_checks
+    - unnecessary_brace_in_string_interps
+    - unnecessary_new
+    - unnecessary_string_escapes
+    - unnecessary_string_interpolations
+    - cascade_invocations
+    - curly_braces_in_flow_control_structures
+    - empty_constructor_bodies
+    - empty_statements
+    - file_names
+    - flutter_style_todos
+    - prefer_collection_literals
+    - prefer_const_declarations
+    - prefer_if_null_operators
+    - prefer_interpolation_to_compose_strings
+    - prefer_spread_collections
+    - require_trailing_commas
+    - sort_child_properties_last
+    - sort_unnamed_constructors_first
+    - use_function_type_syntax_for_parameters
+    - use_full_hex_values_for_flutter_colors
+    - use_string_buffers

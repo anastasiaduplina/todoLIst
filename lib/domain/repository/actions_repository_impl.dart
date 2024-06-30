@@ -1,54 +1,109 @@
-import 'package:todo_list_app/domain/repository/actions_repository.dart';
+import 'dart:io';
 
+import 'package:todo_list_app/data/dao/list_dao.dart';
+import 'package:todo_list_app/data/dto/action_dto.dart';
+import 'package:todo_list_app/domain/repository/actions_repository.dart';
+import 'package:todo_list_app/utils/exceptions/not_valid_revision_exception.dart';
+import 'package:todo_list_app/utils/logger.dart';
+import 'package:uuid/uuid.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
+import '../../data/dao/actions_dao.dart';
+import '../mapper/action_mapper.dart';
 import '../model/action.dart';
 
-class ActionsRepositoryImplTest implements ActionsRepository {
-  ActionsRepositoryImplTest();
+class ActionsRepositoryImpl implements ActionsRepository {
+  final Uuid uuid;
+  final ActionsDao actionsDao;
+  final ListDao listDao;
+  final ActionsMapper actionMapper;
 
-  List<ActionToDo> database = [
-    ActionToDo(1, "Позавтракать", true, false, DateTime.now(), Importance.no),
-    ActionToDo(
-        2, "Утренняя зарядка", false, true, DateTime.now(), Importance.high),
-    ActionToDo(3, "Основные деловые задачи", false, true, DateTime.now(),
-        Importance.low),
-    ActionToDo(
-        4, "Перерыв на обед", true, false, DateTime.now(), Importance.no),
-    ActionToDo(5, "Домашние дела, которые не лень делать", false, true,
-        DateTime.now(), Importance.high),
-    ActionToDo(
-        6, "Общение с котом", false, true, DateTime.now(), Importance.low),
-    ActionToDo(
-        7, "Хобби или увлечения", true, true, DateTime.now(), Importance.no),
-    ActionToDo(8, "Ужин", false, false, DateTime.now(), Importance.high),
-    ActionToDo(9, "Просмотр аниме и дорам", true, true, DateTime.now(),
-        Importance.low),
-    ActionToDo(
-        10, "Вечерняя рутина", true, false, DateTime.now(), Importance.low),
-  ];
-  int sequense = 14;
+  ActionsRepositoryImpl(
+    this.uuid,
+    this.actionsDao,
+    this.listDao,
+    this.actionMapper,
+  );
 
-  @override
-  Future<List<ActionToDo>> addAction(ActionToDo action) {
-    database.add(action);
-    action.id = sequense;
-    sequense++;
-    return Future.value(database);
+  Future<String?> getId() async {
+    var deviceInfo = DeviceInfoPlugin();
+    if (Platform.isIOS) {
+      var iosDeviceInfo = await deviceInfo.iosInfo;
+      return iosDeviceInfo.identifierForVendor;
+    } else if (Platform.isAndroid) {
+      var androidDeviceInfo = await deviceInfo.androidInfo;
+      return androidDeviceInfo.id;
+    } else if (Platform.isWindows) {
+      var windowsDeviceInfo = await deviceInfo.windowsInfo;
+      return windowsDeviceInfo.deviceId;
+    }
+    return null;
   }
 
   @override
-  Future<List<ActionToDo>> deleteAction(ActionToDo action) {
-    database.removeWhere((item) => item.id == action.id);
-    return Future.value(database);
+  Future<void> addAction(ActionToDo action) async {
+    if (action.id.isEmpty) {
+      action.id = uuid.v1();
+    }
+    action
+      ..createdAt = DateTime.now()
+      ..lastUpdatedBy = await getId() ?? "";
+    ActionDto actionDto = actionMapper.mapActionToActionDto(action);
+    await actionsDao.addAction(actionDto);
+    try {
+      await listDao.addAction(actionDto);
+    } on NotValidRevisionException catch (e) {
+      AppLogger.e(e.toString());
+      synchronizeList();
+    }
   }
 
   @override
-  Future<List<ActionToDo>> editAction(ActionToDo action) {
-    database[database.indexWhere((item) => item.id == action.id)] = action;
-    return Future.value(database);
+  Future<void> deleteAction(ActionToDo action) async {
+    ActionDto actionDto = actionMapper.mapActionToActionDto(action);
+    await actionsDao.deleteAction(actionDto);
+    try {
+      await listDao.deleteAction(actionDto);
+    } on NotValidRevisionException catch (e) {
+      AppLogger.e(e.toString());
+      synchronizeList();
+    }
   }
 
   @override
-  Future<List<ActionToDo>> getAll() {
-    return Future.value(database);
+  Future<void> editAction(ActionToDo action) async {
+    action
+      ..changedAt = DateTime.now()
+      ..lastUpdatedBy = await getId() ?? "";
+    ActionDto actionDto = actionMapper.mapActionToActionDto(action);
+    await actionsDao.editAction(actionDto);
+    try {
+      await listDao.editAction(actionDto);
+    } on NotValidRevisionException catch (e) {
+      AppLogger.e(e.toString());
+      synchronizeList();
+    }
+  }
+
+  @override
+  Future<List<ActionToDo>> getAll() async {
+    List<ActionToDo> list = await synchronizeList();
+    return list;
+  }
+
+  @override
+  Future<List<ActionToDo>> synchronizeList() async {
+    List<ActionDto> listDb = await actionsDao.getAll();
+    try {
+      List<ActionDto> listFromServer = await listDao.getList();
+      listDb.addAll(listFromServer);
+      listFromServer = await listDao.updateList(listDb.toSet().toList());
+      return listFromServer
+          .map((e) => actionMapper.mapActionDtoToAction(e))
+          .toList();
+    } on Exception catch (e) {
+      AppLogger.e(e.toString());
+    }
+    return listDb.map((e) => actionMapper.mapActionDtoToAction(e)).toList();
   }
 }

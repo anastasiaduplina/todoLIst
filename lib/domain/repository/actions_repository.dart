@@ -1,11 +1,12 @@
 import '../model/action.dart';
 
 abstract interface class ActionsRepository {
-  Future<List<ActionToDo>> addAction(ActionToDo action);
+  Future<void> addAction(ActionToDo action);
 
-  Future<List<ActionToDo>> deleteAction(ActionToDo action);
+  Future<void> deleteAction(ActionToDo action);
 
-  Future<List<ActionToDo>> editAction(ActionToDo action);
+  Future<void> editAction(ActionToDo action);
+  Future<List<ActionToDo>> synchronizeList();
 
   Future<List<ActionToDo>> getAll();
 }

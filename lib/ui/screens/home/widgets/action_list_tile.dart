@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../../domain/model/action.dart';
 import '../../../../utils/logger.dart';
@@ -20,8 +21,6 @@ class ActionTile extends ConsumerStatefulWidget {
 }
 
 class _ActionTileState extends ConsumerState<ActionTile> {
-  final DateFormat formatter = DateFormat('yyyy-MM-dd');
-
   @override
   void initState() {
     super.initState();
@@ -43,6 +42,8 @@ class _ActionTileState extends ConsumerState<ActionTile> {
 
   @override
   Widget build(BuildContext context) {
+    final DateFormat formatter =
+        DateFormat('dd MMMM yyyy', AppLocalizations.of(context)?.localeName);
     return Dismissible(
       key: Key(widget.action.id.toString()),
       dismissThresholds: const {DismissDirection.startToEnd: 0.3},
@@ -100,7 +101,9 @@ class _ActionTileState extends ConsumerState<ActionTile> {
           activeColor: Colors.green,
           value: widget.action.done,
           side: BorderSide(
-              color: getImportanceColor(widget.action.importance), width: 2),
+            color: getImportanceColor(widget.action.importance),
+            width: 2,
+          ),
           onChanged: (bool? value) {
             ref
                 .read(actionStateProvider.notifier)
@@ -150,12 +153,14 @@ class _ActionTileState extends ConsumerState<ActionTile> {
           color: Colors.grey,
           onPressed: () {
             AppLogger.d(
-                "Navigator push AddActionPage with action.id: ${widget.action.id}");
+              "Navigator push AddActionPage with action.id: ${widget.action.id}",
+            );
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddActionPage(widget.action),
-                ));
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddActionPage(widget.action),
+              ),
+            );
           },
         ),
       ),

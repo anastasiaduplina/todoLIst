@@ -1,0 +1,13 @@
+{
+    "myTasks": "My tasks",
+    "completed": "Completed",
+    "newTask": "New",
+    "save": "Save",
+    "importance": "Importance",
+    "importanceBasic": "Basic",
+    "importanceLow": "Low",
+    "importanceHigh": "!!High",
+    "doUntil": "Do until",
+    "delete": "Delete",
+    "hint": "What should be done..."
+}

@@ -1,0 +1,13 @@
+{
+    "myTasks": "Мои дела",
+    "completed": "Выполнено",
+    "newTask": "Новое",
+    "save": "Сохранить",
+    "importance": "Важность",
+    "importanceBasic": "Нет",
+    "importanceLow": "Низкий",
+    "importanceHigh": "!!Высокий",
+    "doUntil": "Сделать до",
+    "delete": "Удалить",
+    "hint": "Что нужно сделать..."
+}

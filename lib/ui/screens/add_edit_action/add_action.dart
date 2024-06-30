@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_list_app/ui/providers/action_provider.dart';
 import 'package:todo_list_app/utils/logger.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../domain/model/action.dart';
 
@@ -16,7 +17,6 @@ class AddActionPage extends ConsumerStatefulWidget {
 }
 
 class AddActionPageState extends ConsumerState<AddActionPage> {
-  final DateFormat formatter = DateFormat('yyyy-MM-dd');
   late TextEditingController textController;
   late ActionToDo action;
 
@@ -27,8 +27,21 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
     action = widget.action;
   }
 
+  String getImportanceString(Importance importance, BuildContext context) {
+    switch (importance) {
+      case Importance.no:
+        return AppLocalizations.of(context)!.importanceBasic;
+      case Importance.low:
+        return AppLocalizations.of(context)!.importanceLow;
+      case Importance.high:
+        return AppLocalizations.of(context)!.importanceHigh;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final DateFormat formatter =
+        DateFormat('dd MMMM yyyy', AppLocalizations.of(context)?.localeName);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -44,18 +57,21 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () {
-                AppLogger.d("Save action.id: ${widget.action.id}");
-                action.text = textController.text;
-                ref.read(actionStateProvider.notifier).addOrEditAction(action);
-                AppLogger.d("Navigator pop from AddActionPage");
-                Navigator.pop(context);
-              },
-              child: Text("Сохранить",
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(color: Colors.blue)))
+            onPressed: () {
+              AppLogger.d("Save action.id: ${widget.action.id}");
+              action.text = textController.text;
+              ref.read(actionStateProvider.notifier).addOrEditAction(action);
+              AppLogger.d("Navigator pop from AddActionPage");
+              Navigator.pop(context);
+            },
+            child: Text(
+              AppLocalizations.of(context)!.save,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(color: Colors.blue),
+            ),
+          ),
         ],
       ),
       body: Padding(
@@ -69,13 +85,14 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
               maxLines: 10,
               minLines: 4,
               decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Theme.of(context).cardColor,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  hintText: "Что надо сделать..."),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                hintText: AppLocalizations.of(context)!.hint,
+              ),
             ),
             const SizedBox(
               height: 16,
@@ -83,17 +100,24 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Важность",
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  AppLocalizations.of(context)!.importance,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 MenuAnchor(
                   style: MenuStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                        Theme.of(context).cardColor),
-                    surfaceTintColor: MaterialStateProperty.all<Color>(
-                        Theme.of(context).cardColor),
+                    backgroundColor: WidgetStateProperty.all<Color>(
+                      Theme.of(context).cardColor,
+                    ),
+                    surfaceTintColor: WidgetStateProperty.all<Color>(
+                      Theme.of(context).cardColor,
+                    ),
                   ),
-                  builder: (BuildContext context, MenuController controller,
-                      Widget? child) {
+                  builder: (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
                     return TextButton(
                       onPressed: () {
                         if (controller.isOpen) {
@@ -102,32 +126,39 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                           controller.open();
                         }
                       },
-                      child: Text(action.importance.value,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelLarge
-                              ?.copyWith(color: Colors.grey)),
+                      child: Text(
+                        getImportanceString(action.importance, context),
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelLarge
+                            ?.copyWith(color: Colors.grey),
+                      ),
                     );
                   },
                   menuChildren: List<MenuItemButton>.generate(
                     3,
                     (int index) => MenuItemButton(
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Theme.of(context).cardColor),
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          Theme.of(context).cardColor,
+                        ),
                       ),
                       onPressed: () {
                         AppLogger.d(
-                            "Change importance of action.id: ${widget.action.id} to ${Importance.values[index]}");
+                          "Change importance of action.id: ${widget.action.id} to ${Importance.values[index]}",
+                        );
                         setState(
-                            () => action.importance = Importance.values[index]);
+                          () => action.importance = Importance.values[index],
+                        );
                       },
                       child: Text(
                         Importance.values[index].value,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: (Importance.values[index] == Importance.high)
-                                ? Colors.red
-                                : Colors.grey),
+                              color:
+                                  (Importance.values[index] == Importance.high)
+                                      ? Colors.red
+                                      : Colors.grey,
+                            ),
                       ),
                     ),
                   ),
@@ -138,8 +169,10 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Сделать до",
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  AppLocalizations.of(context)!.doUntil,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 TextButton(
                   child: action.deadlineON
                       ? Text(
@@ -163,7 +196,8 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                     );
                     if (pickedDate != null) {
                       AppLogger.d(
-                          "Change deadline of action.id: ${widget.action.id} to $pickedDate");
+                        "Change deadline of action.id: ${widget.action.id} to $pickedDate",
+                      );
                       setState(() {
                         action.deadline = pickedDate;
                       });
@@ -171,15 +205,17 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                   },
                 ),
                 Switch(
-                    value: action.deadlineON,
-                    activeColor: Colors.blue,
-                    onChanged: (bool value) {
-                      AppLogger.d(
-                          "Change deadlineON of action.id: ${widget.action.id} to $value");
-                      setState(() {
-                        action.deadlineON = value;
-                      });
-                    }),
+                  value: action.deadlineON,
+                  activeColor: Colors.blue,
+                  onChanged: (bool value) {
+                    AppLogger.d(
+                      "Change deadlineON of action.id: ${widget.action.id} to $value",
+                    );
+                    setState(() {
+                      action.deadlineON = value;
+                    });
+                  },
+                ),
               ],
             ),
             const Divider(),
@@ -194,11 +230,13 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                 Icons.delete,
                 color: Colors.red,
               ),
-              label: Text('Удалить',
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(color: Colors.red)),
+              label: Text(
+                AppLocalizations.of(context)!.delete,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(color: Colors.red),
+              ),
             ),
           ],
         ),
