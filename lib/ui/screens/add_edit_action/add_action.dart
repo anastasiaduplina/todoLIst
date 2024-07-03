@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_list_app/ui/providers/action_provider.dart';
@@ -16,7 +17,6 @@ class AddActionPage extends ConsumerStatefulWidget {
 }
 
 class AddActionPageState extends ConsumerState<AddActionPage> {
-  final DateFormat formatter = DateFormat('yyyy-MM-dd');
   late TextEditingController textController;
   late ActionToDo action;
 
@@ -27,13 +27,48 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
     action = widget.action;
   }
 
+  void setPickedDate() async {
+    if (!action.deadlineON) {
+      return;
+    }
+
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1950),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      AppLogger.d(
+        "Change deadline of action.id: ${action.id} to $pickedDate",
+      );
+      setState(() {
+        action.deadline = pickedDate;
+      });
+    }
+  }
+
+  String getImportanceString(Importance importance, BuildContext context) {
+    switch (importance) {
+      case Importance.no:
+        return AppLocalizations.of(context).importanceBasic;
+      case Importance.low:
+        return AppLocalizations.of(context).importanceLow;
+      case Importance.high:
+        return AppLocalizations.of(context).importanceHigh;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    final DateFormat formatter =
+        DateFormat('dd MMMM yyyy', AppLocalizations.of(context).localeName);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        surfaceTintColor: Theme.of(context).cardColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        surfaceTintColor: theme.cardColor,
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -44,18 +79,18 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () {
-                AppLogger.d("Save action.id: ${widget.action.id}");
-                action.text = textController.text;
-                ref.read(actionStateProvider.notifier).addOrEditAction(action);
-                AppLogger.d("Navigator pop from AddActionPage");
-                Navigator.pop(context);
-              },
-              child: Text("Сохранить",
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(color: Colors.blue)))
+            onPressed: () {
+              AppLogger.d("Save action.id: ${action.id}");
+              action.text = textController.text;
+              ref.read(actionStateProvider.notifier).addOrEditAction(action);
+              AppLogger.d("Navigator pop from AddActionPage");
+              Navigator.pop(context);
+            },
+            child: Text(
+              AppLocalizations.of(context).save,
+              style: theme.textTheme.titleSmall?.copyWith(color: Colors.blue),
+            ),
+          ),
         ],
       ),
       body: Padding(
@@ -69,13 +104,14 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
               maxLines: 10,
               minLines: 4,
               decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Theme.of(context).cardColor,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  hintText: "Что надо сделать..."),
+                filled: true,
+                fillColor: theme.cardColor,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                hintText: AppLocalizations.of(context).hint,
+              ),
             ),
             const SizedBox(
               height: 16,
@@ -83,17 +119,24 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Важность",
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  AppLocalizations.of(context).importance,
+                  style: theme.textTheme.titleMedium,
+                ),
                 MenuAnchor(
                   style: MenuStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                        Theme.of(context).cardColor),
-                    surfaceTintColor: MaterialStateProperty.all<Color>(
-                        Theme.of(context).cardColor),
+                    backgroundColor: WidgetStateProperty.all<Color>(
+                      theme.cardColor,
+                    ),
+                    surfaceTintColor: WidgetStateProperty.all<Color>(
+                      theme.cardColor,
+                    ),
                   ),
-                  builder: (BuildContext context, MenuController controller,
-                      Widget? child) {
+                  builder: (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
                     return TextButton(
                       onPressed: () {
                         if (controller.isOpen) {
@@ -102,32 +145,36 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                           controller.open();
                         }
                       },
-                      child: Text(action.importance.value,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelLarge
-                              ?.copyWith(color: Colors.grey)),
+                      child: Text(
+                        getImportanceString(action.importance, context),
+                        style: theme.textTheme.labelLarge
+                            ?.copyWith(color: Colors.grey),
+                      ),
                     );
                   },
                   menuChildren: List<MenuItemButton>.generate(
                     3,
                     (int index) => MenuItemButton(
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Theme.of(context).cardColor),
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          theme.cardColor,
+                        ),
                       ),
                       onPressed: () {
                         AppLogger.d(
-                            "Change importance of action.id: ${widget.action.id} to ${Importance.values[index]}");
+                          "Change importance of action.id: ${action.id} to ${Importance.values[index]}",
+                        );
                         setState(
-                            () => action.importance = Importance.values[index]);
+                          () => action.importance = Importance.values[index],
+                        );
                       },
                       child: Text(
-                        Importance.values[index].value,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: (Importance.values[index] == Importance.high)
-                                ? Colors.red
-                                : Colors.grey),
+                        getImportanceString(Importance.values[index], context),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: (Importance.values[index] == Importance.high)
+                              ? Colors.red
+                              : Colors.grey,
+                        ),
                       ),
                     ),
                   ),
@@ -138,54 +185,38 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Сделать до",
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  AppLocalizations.of(context).doUntil,
+                  style: theme.textTheme.titleMedium,
+                ),
                 TextButton(
+                  onPressed: () => setPickedDate(),
                   child: action.deadlineON
                       ? Text(
                           formatter.format(action.deadline),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                          style: theme.textTheme.bodyMedium
                               ?.copyWith(color: Colors.blue),
                         )
                       : const Text(""),
-                  onPressed: () async {
-                    if (!action.deadlineON) {
-                      return;
-                    }
-
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(1950),
-                      lastDate: DateTime(2100),
-                    );
-                    if (pickedDate != null) {
-                      AppLogger.d(
-                          "Change deadline of action.id: ${widget.action.id} to $pickedDate");
-                      setState(() {
-                        action.deadline = pickedDate;
-                      });
-                    } else {}
-                  },
                 ),
                 Switch(
-                    value: action.deadlineON,
-                    activeColor: Colors.blue,
-                    onChanged: (bool value) {
-                      AppLogger.d(
-                          "Change deadlineON of action.id: ${widget.action.id} to $value");
-                      setState(() {
-                        action.deadlineON = value;
-                      });
-                    }),
+                  value: action.deadlineON,
+                  activeColor: Colors.blue,
+                  onChanged: (bool value) {
+                    AppLogger.d(
+                      "Change deadlineON of action.id: ${action.id} to $value",
+                    );
+                    setState(() {
+                      action.deadlineON = value;
+                    });
+                  },
+                ),
               ],
             ),
             const Divider(),
             TextButton.icon(
               onPressed: () {
-                AppLogger.d("Delete action.id: ${widget.action.id}");
+                AppLogger.d("Delete action.id: ${action.id}");
                 ref.read(actionStateProvider.notifier).deleteAction(action);
                 AppLogger.d("Navigator pop from AddActionPage");
                 Navigator.pop(context);
@@ -194,11 +225,10 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                 Icons.delete,
                 color: Colors.red,
               ),
-              label: Text('Удалить',
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(color: Colors.red)),
+              label: Text(
+                AppLocalizations.of(context).delete,
+                style: theme.textTheme.labelLarge?.copyWith(color: Colors.red),
+              ),
             ),
           ],
         ),

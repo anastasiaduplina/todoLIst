@@ -12,6 +12,8 @@ ThemeData lightTheme() {
     cardColor: Colors.white,
     scaffoldBackgroundColor: const Color(0xFFF7f6f2),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFF007aff), foregroundColor: Colors.white),
+      backgroundColor: Color(0xFF007aff),
+      foregroundColor: Colors.white,
+    ),
   );
 }
