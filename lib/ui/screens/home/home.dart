@@ -34,6 +34,7 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var theme = Theme.of(context);
     List<ActionToDo> items = ref.watch(actionStateProvider).valueOrNull ?? [];
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -45,16 +46,16 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
             snap: false,
             floating: false,
             expandedHeight: 160,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            shadowColor: Theme.of(context).shadowColor,
-            surfaceTintColor: Theme.of(context).cardColor,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            shadowColor: theme.shadowColor,
+            surfaceTintColor: theme.cardColor,
             flexibleSpace: FlexibleSpaceBar(
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.myTasks,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    AppLocalizations.of(context).myTasks,
+                    style: theme.textTheme.headlineMedium,
                   ),
                   IconButton(
                     onPressed: () {
@@ -77,7 +78,7 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
               height: 20,
               child: Center(
                 child: Text(
-                  '${AppLocalizations.of(context)!.completed} - ${countDoneActions(items)}',
+                  '${AppLocalizations.of(context).completed} - ${countDoneActions(items)}',
                 ),
               ),
             ),
@@ -87,11 +88,11 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
               padding: const EdgeInsets.all(16.0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
+                  color: theme.cardColor,
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).shadowColor.withOpacity(0.5),
+                      color: theme.shadowColor.withOpacity(0.5),
                       spreadRadius: 0,
                       blurRadius: 5,
                       offset: const Offset(0, 3),
@@ -143,7 +144,7 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
                             },
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: AppLocalizations.of(context)!.newTask,
+                              hintText: AppLocalizations.of(context).newTask,
                             ),
                           ),
                         ),

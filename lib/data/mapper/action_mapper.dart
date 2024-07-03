@@ -1,6 +1,7 @@
 import 'package:todo_list_app/data/dto/action_dto.dart';
-import 'package:todo_list_app/domain/mapper/importance_mapper.dart';
 import 'package:todo_list_app/domain/model/action.dart';
+
+import 'importance_mapper.dart';
 
 class ActionsMapper {
   final ImportanceMapper importanceMapper;

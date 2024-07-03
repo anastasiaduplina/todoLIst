@@ -65,7 +65,8 @@ Apk файл лежит в папке apk
 ```
 Запустите приложение:
 ```bash
-  flutter run
+  flutter run --dart-define=TOKEN=your_token
+
 ```
 
 

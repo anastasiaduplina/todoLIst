@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_list_app/data/dao/list_dao.dart';
 import 'package:todo_list_app/data/dto/action_dto.dart';
 import 'package:todo_list_app/data/dto/element_dto.dart';
@@ -14,10 +15,20 @@ import '../dto/list_dto.dart';
 class ListDaoImpl implements ListDao {
   ListDaoImpl();
 
+  static Future<bool> setRevisionFromSharedPreferences(int revision) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt('revision', revision);
+  }
+
+  static Future<int> getRevisionFromSharedPreferences() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('revision') ?? 0;
+  }
+
   @override
   Future<void> addAction(ActionDto actionDto) async {
     final url = Uri.parse(Constants.baseUrlList);
-    int revision = await Constants.getRevision();
+    int revision = await getRevisionFromSharedPreferences();
     ElementDto elementDto = ElementDto(actionDto);
     final response = await http.post(
       url,
@@ -33,13 +44,13 @@ class ListDaoImpl implements ListDao {
         throw NotValidRevisionException(revision.toString());
       }
     }
-    Constants.setRevision(jsonDecode(response.body)["revision"]);
+    setRevisionFromSharedPreferences(jsonDecode(response.body)["revision"]);
   }
 
   @override
   Future<void> deleteAction(ActionDto actionDto) async {
     final url = Uri.parse('${Constants.baseUrlList}/${actionDto.id}');
-    int revision = await Constants.getRevision();
+    int revision = await getRevisionFromSharedPreferences();
     final response = await http.delete(
       url,
       headers: {
@@ -53,13 +64,13 @@ class ListDaoImpl implements ListDao {
         throw NotValidRevisionException(revision.toString());
       }
     }
-    Constants.setRevision(jsonDecode(response.body)["revision"]);
+    setRevisionFromSharedPreferences(jsonDecode(response.body)["revision"]);
   }
 
   @override
   Future<void> editAction(ActionDto actionDto) async {
     final url = Uri.parse('${Constants.baseUrlList}/${actionDto.id}');
-    int revision = await Constants.getRevision();
+    int revision = await getRevisionFromSharedPreferences();
     ElementDto elementDto = ElementDto(actionDto);
     final response = await http.put(
       url,
@@ -75,7 +86,7 @@ class ListDaoImpl implements ListDao {
         throw NotValidRevisionException(revision.toString());
       }
     }
-    Constants.setRevision(jsonDecode(response.body)["revision"]);
+    setRevisionFromSharedPreferences(jsonDecode(response.body)["revision"]);
   }
 
   @override
@@ -91,7 +102,7 @@ class ListDaoImpl implements ListDao {
       AppLogger.e(response.statusCode.toString());
     }
     ListDto listDto = ListDto.fromJson(jsonDecode(response.body));
-    Constants.setRevision(listDto.revision);
+    setRevisionFromSharedPreferences(listDto.revision);
     return listDto.list;
   }
 
@@ -113,7 +124,7 @@ class ListDaoImpl implements ListDao {
   @override
   Future<List<ActionDto>> updateList(List<ActionDto> list) async {
     final url = Uri.parse(Constants.baseUrlList);
-    int revision = await Constants.getRevision();
+    int revision = await getRevisionFromSharedPreferences();
     final response = await http.patch(
       url,
       headers: {
@@ -129,7 +140,7 @@ class ListDaoImpl implements ListDao {
       }
     }
     ListDto listDto = ListDto.fromJson(jsonDecode(response.body));
-    Constants.setRevision(listDto.revision);
+    setRevisionFromSharedPreferences(listDto.revision);
     return listDto.list;
   }
 }

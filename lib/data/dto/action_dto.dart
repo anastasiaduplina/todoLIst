@@ -10,11 +10,8 @@ class ActionDto {
     fromJson: _boolFromString,
   )
   bool done;
-  @JsonKey(
-    fromJson: _intFromNullable,
-  )
   int? deadline;
-  String importance;
+  ImportanceDto importance;
   String color;
   @JsonKey(name: "created_at")
   int createdAt;
@@ -34,15 +31,6 @@ class ActionDto {
       return done;
     }
     return false;
-  }
-
-  static int? _intFromNullable(Object? deadline) {
-    if (deadline != null) {
-      if (deadline is int) {
-        return deadline;
-      }
-    }
-    return null;
   }
 
   ActionDto(
@@ -78,4 +66,15 @@ class ActionDto {
 
   @override
   int get hashCode => text.hashCode;
+}
+
+enum ImportanceDto {
+  @JsonValue("basic")
+  basic,
+  @JsonValue("low")
+  low,
+  @JsonValue("high")
+  high;
+
+  const ImportanceDto();
 }

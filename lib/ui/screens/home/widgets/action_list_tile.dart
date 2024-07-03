@@ -42,8 +42,9 @@ class _ActionTileState extends ConsumerState<ActionTile> {
 
   @override
   Widget build(BuildContext context) {
+    var theme = Theme.of(context);
     final DateFormat formatter =
-        DateFormat('dd MMMM yyyy', AppLocalizations.of(context)?.localeName);
+        DateFormat('dd MMMM yyyy', AppLocalizations.of(context).localeName);
     return Dismissible(
       key: Key(widget.action.id.toString()),
       dismissThresholds: const {DismissDirection.startToEnd: 0.3},
@@ -126,11 +127,11 @@ class _ActionTileState extends ConsumerState<ActionTile> {
                   child: Text(
                     widget.action.text,
                     style: widget.action.done
-                        ? Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                              color: Colors.grey,
-                            )
-                        : Theme.of(context).textTheme.bodyLarge,
+                        ? theme.textTheme.bodyLarge?.copyWith(
+                            decoration: TextDecoration.lineThrough,
+                            color: Colors.grey,
+                          )
+                        : theme.textTheme.bodyLarge,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 3,
                   ),
@@ -140,9 +141,7 @@ class _ActionTileState extends ConsumerState<ActionTile> {
             widget.action.deadlineON
                 ? Text(
                     formatter.format(widget.action.deadline),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
+                    style: theme.textTheme.bodyMedium
                         ?.copyWith(color: Colors.grey),
                   )
                 : const SizedBox.shrink(),

@@ -24,7 +24,6 @@ dependencies:
   riverpod_annotation: ^2.3.4
   path: any
   intl: ^0.19.0
-#  flutter_gen: any
   logger: ^2.3.0
   sqflite: ^2.3.3+1
   uuid: ^4.4.0
@@ -32,7 +31,6 @@ dependencies:
   json_annotation: ^4.9.0
   shared_preferences: ^2.2.3
   device_info_plus: ^10.1.0
-#  flutter_gen: any
   flutter_gen: any
 dev_dependencies:
   flutter_test:

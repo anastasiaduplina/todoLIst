@@ -25,13 +25,11 @@ class ActionToDo {
 }
 
 enum Importance {
-  no("Нет"),
-  low("Низкий"),
-  high("!!Высокий");
+  no,
+  low,
+  high;
 
-  const Importance(this.value);
-
-  final String value;
+  const Importance();
 }
 
 ActionToDo getEmptyAction() {

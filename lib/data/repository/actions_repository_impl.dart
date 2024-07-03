@@ -8,9 +8,9 @@ import 'package:todo_list_app/utils/logger.dart';
 import 'package:uuid/uuid.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
-import '../../data/dao/actions_dao.dart';
+import '../dao/actions_dao.dart';
+import '../../domain/model/action.dart';
 import '../mapper/action_mapper.dart';
-import '../model/action.dart';
 
 class ActionsRepositoryImpl implements ActionsRepository {
   final Uuid uuid;
