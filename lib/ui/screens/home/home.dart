@@ -1,12 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo_list_app/ui/providers/action_provider.dart';
 import 'package:todo_list_app/ui/screens/home/widgets/action_list_tile.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:todo_list_app/utils/logger.dart';
-
+import 'package:go_router/go_router.dart';
 import '../../../domain/model/action.dart';
-import '../add_edit_action/add_action.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({super.key});
@@ -19,12 +22,46 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
   late bool eyeON;
   late TextEditingController textController;
   final scrollController = ScrollController();
+  List<ConnectivityResult> _connectionStatus = [ConnectivityResult.none];
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
     eyeON = true;
     textController = TextEditingController(text: "");
+    initConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  Future<void> initConnectivity() async {
+    late List<ConnectivityResult> result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      AppLogger.e('Couldn\'t check connectivity status:$e');
+      return;
+    }
+
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(List<ConnectivityResult> result) async {
+    if (_connectionStatus[0] == ConnectivityResult.none &&
+        result[0] != ConnectivityResult.none) {
+      await ref.read(actionStateProvider.notifier).synchronizeList(true);
+    }
+    setState(() {
+      _connectionStatus = result;
+    });
+
+    AppLogger.i('Connectivity changed: $_connectionStatus');
   }
 
   int countDoneActions(List<ActionToDo> list) {
@@ -49,6 +86,11 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
             backgroundColor: theme.scaffoldBackgroundColor,
             shadowColor: theme.shadowColor,
             surfaceTintColor: theme.cardColor,
+            actions: [
+              (_connectionStatus[0] == ConnectivityResult.none)
+                  ? const Icon(Icons.wifi_off)
+                  : const Icon(Icons.wifi),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,13 +176,9 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
                               // TODO(nastya): быстрое добавление
                               //  пока перекидывает на обычную страницу добавления
                               AppLogger.d("Push AddAction Page");
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddActionPage(getEmptyAction()),
-                                ),
-                              );
+                              context.goNamed("task", pathParameters: {
+                                'id': "-1",
+                              },);
                             },
                             decoration: InputDecoration(
                               border: InputBorder.none,
@@ -164,15 +202,17 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
         shape: const CircleBorder(),
         onPressed: () {
           AppLogger.d("Push AddAction Page");
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddActionPage(getEmptyAction()),
-            ),
-          );
+          context.goNamed("task", pathParameters: {
+            'id': "-1",
+          },);
         },
         child: const Icon(Icons.add),
       ),
     );
+  }
+  @override
+  dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
   }
 }

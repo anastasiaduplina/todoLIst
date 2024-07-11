@@ -3,12 +3,14 @@ import 'package:todo_list_app/data/dao/actions_dao.dart';
 import 'package:todo_list_app/data/dao/actions_dao_impl.dart';
 import 'package:todo_list_app/data/dao/list_dao.dart';
 import 'package:todo_list_app/data/dao/list_dao_impl.dart';
-import 'package:todo_list_app/domain/repository/actions_repository.dart';
-import 'package:todo_list_app/data/repository/actions_repository_impl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/mapper/action_mapper.dart';
 import '../data/mapper/importance_mapper.dart';
+import '../data/repository/actions_api_repository_impl.dart';
+import '../data/repository/actions_db_repository_impl.dart';
+import '../domain/repository/actions_api_repository.dart';
+import '../domain/repository/actions_db_repository.dart';
 
 class Providers {
   static final uuidProvider = Provider((ref) => const Uuid());
@@ -26,9 +28,14 @@ class Providers {
     (ref) => ActionsDaoImpl(),
   );
 
-  static final actionRepositoryProvider = Provider<ActionsRepository>(
-    (ref) => ActionsRepositoryImpl(
-      ref.read(uuidProvider),
+  static final actionDBRepositoryProvider = Provider<ActionsDBRepository>(
+    (ref) => ActionsDBRepositoryImpl(
+      ref.read(actionsDaoProvider),
+      ref.read(actionsMapperProvider),
+    ),
+  );
+  static final actionAPIRepositoryProvider = Provider<ActionsAPIRepository>(
+    (ref) => ActionsAPIRepositoryImpl(
       ref.read(actionsDaoProvider),
       ref.read(listDaoProvider),
       ref.read(actionsMapperProvider),

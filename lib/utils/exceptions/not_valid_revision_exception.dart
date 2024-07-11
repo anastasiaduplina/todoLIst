@@ -4,5 +4,5 @@ class NotValidRevisionException implements Exception {
   const NotValidRevisionException(this.msg);
 
   @override
-  String toString() => 'NotValidRevisionException: $msg';
+  String toString() => 'Current revision is not actual: $msg';
 }
