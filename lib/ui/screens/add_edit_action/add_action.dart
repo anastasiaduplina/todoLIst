@@ -1,16 +1,29 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_list_app/ui/providers/action_provider.dart';
 import 'package:todo_list_app/utils/logger.dart';
+import 'package:todo_list_app/utils/scaffold_messege_extension.dart';
 
 import '../../../domain/model/action.dart';
+import '../../../utils/exceptions/not_exist_action_exception.dart';
+import '../../../utils/exceptions/not_valid_auth_exception.dart';
+import '../../../utils/exceptions/not_valid_revision_exception.dart';
+import '../../../utils/exceptions/server_error_exception.dart';
 
 class AddActionPage extends ConsumerStatefulWidget {
-  const AddActionPage(this.action, {super.key});
+  const AddActionPage(
+    this.id, {
+    super.key,
+  });
 
-  final ActionToDo action;
+  final String id;
 
   @override
   AddActionPageState createState() => AddActionPageState();
@@ -19,19 +32,47 @@ class AddActionPage extends ConsumerStatefulWidget {
 class AddActionPageState extends ConsumerState<AddActionPage> {
   late TextEditingController textController;
   late ActionToDo action;
+  List<ConnectivityResult> _connectionStatus = [ConnectivityResult.none];
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  bool isFirst = true;
 
   @override
   void initState() {
     super.initState();
-    textController = TextEditingController(text: widget.action.text);
-    action = widget.action;
+    action = getEmptyAction();
+    isFirst = true;
+
+    textController = TextEditingController(text: action.text);
+    initConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
 
-  void setPickedDate() async {
-    if (!action.deadlineON) {
+  Future<void> initConnectivity() async {
+    late List<ConnectivityResult> result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      AppLogger.e('Couldn\'t check connectivity status:$e');
       return;
     }
 
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(List<ConnectivityResult> result) async {
+    setState(() {
+      _connectionStatus = result;
+    });
+    AppLogger.i('Connectivity changed: $_connectionStatus');
+  }
+
+  void setPickedDate() async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -60,10 +101,20 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  build(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
     var theme = Theme.of(context);
     final DateFormat formatter =
         DateFormat('dd MMMM yyyy', AppLocalizations.of(context).localeName);
+    List<ActionToDo> list = ref.watch(actionStateProvider).value ?? [];
+    if (isFirst) {
+      action = list.firstWhere(
+        (item) => item.id == widget.id,
+        orElse: () => getEmptyAction(),
+      );
+      textController.text = action.text;
+      isFirst = false;
+    }
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -74,17 +125,37 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
           icon: const Icon(Icons.close),
           onPressed: () {
             AppLogger.d("Navigator pop from AddActionPage");
-            Navigator.pop(context);
+            context.pop();
           },
         ),
         actions: [
           TextButton(
-            onPressed: () {
+            key: const Key("saveButton"),
+            onPressed: () async {
               AppLogger.d("Save action.id: ${action.id}");
               action.text = textController.text;
-              ref.read(actionStateProvider.notifier).addOrEditAction(action);
+              try {
+                await ref.read(actionStateProvider.notifier).addOrEditAction(
+                    action, (_connectionStatus[0] != ConnectivityResult.none),);
+              } on NotValidRevisionException catch (e) {
+                messenger.toastButton(e.toString(), () {
+                  ref.read(actionStateProvider.notifier).synchronizeList(
+                      (_connectionStatus[0] != ConnectivityResult.none),);
+                });
+              } on NotExistActionException catch (e) {
+                messenger.toast(e.toString());
+              } on NotValidAuthException catch (e) {
+                messenger.toast(e.toString());
+              } on ServerErrorException catch (e) {
+                messenger.toast(e.toString());
+              } catch (e) {
+                messenger.toast(e.toString());
+              }
               AppLogger.d("Navigator pop from AddActionPage");
-              Navigator.pop(context);
+              if(context.mounted){
+                context.pop();
+              }
+
             },
             child: Text(
               AppLocalizations.of(context).save,
@@ -190,7 +261,7 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                   style: theme.textTheme.titleMedium,
                 ),
                 TextButton(
-                  onPressed: () => setPickedDate(),
+                  onPressed: () => action.deadlineON ? setPickedDate() : {},
                   child: action.deadlineON
                       ? Text(
                           formatter.format(action.deadline),
@@ -215,11 +286,30 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
             ),
             const Divider(),
             TextButton.icon(
-              onPressed: () {
+              onPressed: () async {
                 AppLogger.d("Delete action.id: ${action.id}");
-                ref.read(actionStateProvider.notifier).deleteAction(action);
+                try {
+                  await ref.read(actionStateProvider.notifier).deleteAction(
+                      action,
+                      (_connectionStatus[0] != ConnectivityResult.none),);
+                } on NotValidRevisionException catch (e) {
+                  messenger.toastButton(e.toString(), () {
+                    ref.read(actionStateProvider.notifier).synchronizeList(
+                        (_connectionStatus[0] != ConnectivityResult.none),);
+                  });
+                } on NotExistActionException catch (e) {
+                  messenger.toast(e.toString());
+                } on NotValidAuthException catch (e) {
+                  messenger.toast(e.toString());
+                } on ServerErrorException catch (e) {
+                  messenger.toast(e.toString());
+                } catch (e) {
+                  messenger.toast(e.toString());
+                }
                 AppLogger.d("Navigator pop from AddActionPage");
-                Navigator.pop(context);
+                if(context.mounted){
+                  context.pop();
+                }
               },
               icon: const Icon(
                 Icons.delete,
@@ -234,5 +324,10 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
         ),
       ),
     );
+  }
+  @override
+  dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
   }
 }

@@ -73,7 +73,7 @@ enum ImportanceDto {
   basic,
   @JsonValue("low")
   low,
-  @JsonValue("high")
+  @JsonValue("important")
   high;
 
   const ImportanceDto();

@@ -1,12 +1,21 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:todo_list_app/utils/exceptions/not_exist_action_exception.dart';
+import 'package:todo_list_app/utils/exceptions/not_valid_auth_exception.dart';
+import 'package:todo_list_app/utils/exceptions/not_valid_revision_exception.dart';
+import 'package:todo_list_app/utils/exceptions/server_error_exception.dart';
+import 'package:todo_list_app/utils/scaffold_messege_extension.dart';
 
 import '../../../../domain/model/action.dart';
 import '../../../../utils/logger.dart';
 import '../../../providers/action_provider.dart';
-import '../../add_edit_action/add_action.dart';
 
 class ActionTile extends ConsumerStatefulWidget {
   const ActionTile({
@@ -21,9 +30,38 @@ class ActionTile extends ConsumerStatefulWidget {
 }
 
 class _ActionTileState extends ConsumerState<ActionTile> {
+  List<ConnectivityResult> _connectionStatus = [ConnectivityResult.none];
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
   @override
   void initState() {
     super.initState();
+    initConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  Future<void> initConnectivity() async {
+    late List<ConnectivityResult> result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      AppLogger.e('Couldn\'t check connectivity status:$e');
+      return;
+    }
+
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(List<ConnectivityResult> result) async {
+    setState(() {
+      _connectionStatus = result;
+    });
+    AppLogger.i('Connectivity changed: $_connectionStatus');
   }
 
   IconData? getImportanceIcon(Importance importance) {
@@ -42,6 +80,7 @@ class _ActionTileState extends ConsumerState<ActionTile> {
 
   @override
   Widget build(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
     var theme = Theme.of(context);
     final DateFormat formatter =
         DateFormat('dd MMMM yyyy', AppLocalizations.of(context).localeName);
@@ -74,25 +113,52 @@ class _ActionTileState extends ConsumerState<ActionTile> {
         AppLogger.d("Swipe direction: $direction");
         if (direction == DismissDirection.startToEnd) {
           AppLogger.d("Mark done action.id: ${widget.action.id}");
-          setState(() {
-            ref
-                .read(actionStateProvider.notifier)
-                .markDoneOrNot(widget.action, true);
-          });
-
-          await ref
-              .read(actionStateProvider.notifier)
-              .markDoneOrNot(widget.action, widget.action.done);
+          try {
+            await ref.read(actionStateProvider.notifier).markDoneOrNot(
+                widget.action,
+                true,
+                (_connectionStatus[0] != ConnectivityResult.none),);
+          } on NotValidRevisionException catch (e) {
+            messenger.toastButton(e.toString(), () {
+              ref.read(actionStateProvider.notifier).synchronizeList(
+                  (_connectionStatus[0] != ConnectivityResult.none),);
+            });
+          } on NotExistActionException catch (e) {
+            messenger.toast(e.toString());
+          } on NotValidAuthException catch (e) {
+            messenger.toast(e.toString());
+          } on ServerErrorException catch (e) {
+            messenger.toast(e.toString());
+          } catch (e) {
+            messenger.toast(e.toString());
+          }
           return false;
         } else if (direction == DismissDirection.endToStart) {
           return true;
         }
         return false;
       },
-      onDismissed: (direction) {
+      onDismissed: (direction) async {
         if (direction == DismissDirection.endToStart) {
           AppLogger.d("Delete action.id: ${widget.action.id}");
-          ref.read(actionStateProvider.notifier).deleteAction(widget.action);
+          try {
+            await ref.read(actionStateProvider.notifier).deleteAction(
+                widget.action,
+                (_connectionStatus[0] != ConnectivityResult.none),);
+          } on NotValidRevisionException catch (e) {
+            messenger.toastButton(e.toString(), () {
+              ref.read(actionStateProvider.notifier).synchronizeList(
+                  (_connectionStatus[0] != ConnectivityResult.none),);
+            });
+          } on NotExistActionException catch (e) {
+            messenger.toast(e.toString());
+          } on NotValidAuthException catch (e) {
+            messenger.toast(e.toString());
+          } on ServerErrorException catch (e) {
+            messenger.toast(e.toString());
+          } catch (e) {
+            messenger.toast(e.toString());
+          }
         }
       },
       child: ListTile(
@@ -105,10 +171,26 @@ class _ActionTileState extends ConsumerState<ActionTile> {
             color: getImportanceColor(widget.action.importance),
             width: 2,
           ),
-          onChanged: (bool? value) {
-            ref
-                .read(actionStateProvider.notifier)
-                .markDoneOrNot(widget.action, !widget.action.done);
+          onChanged: (bool? value) async {
+            try {
+              await ref.read(actionStateProvider.notifier).markDoneOrNot(
+                  widget.action,
+                  !widget.action.done,
+                  (_connectionStatus[0] != ConnectivityResult.none),);
+            } on NotValidRevisionException catch (e) {
+              messenger.toastButton(e.toString(), () {
+                ref.read(actionStateProvider.notifier).synchronizeList(
+                    (_connectionStatus[0] != ConnectivityResult.none),);
+              });
+            } on NotExistActionException catch (e) {
+              messenger.toast(e.toString());
+            } on NotValidAuthException catch (e) {
+              messenger.toast(e.toString());
+            } on ServerErrorException catch (e) {
+              messenger.toast(e.toString());
+            } catch (e) {
+              messenger.toast(e.toString());
+            }
             AppLogger.d("Mark done action.id: ${widget.action.id}");
           },
         ),
@@ -154,15 +236,17 @@ class _ActionTileState extends ConsumerState<ActionTile> {
             AppLogger.d(
               "Navigator push AddActionPage with action.id: ${widget.action.id}",
             );
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddActionPage(widget.action),
-              ),
-            );
+            context.goNamed("task", pathParameters: {
+              'id': widget.action.id,
+            },);
           },
         ),
       ),
     );
+  }
+  @override
+  dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
   }
 }

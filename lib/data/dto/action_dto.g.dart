@@ -33,5 +33,5 @@ Map<String, dynamic> _$ActionDtoToJson(ActionDto instance) => <String, dynamic>{
 const _$ImportanceDtoEnumMap = {
   ImportanceDto.basic: 'basic',
   ImportanceDto.low: 'low',
-  ImportanceDto.high: 'high',
+  ImportanceDto.high: 'important',
 };
