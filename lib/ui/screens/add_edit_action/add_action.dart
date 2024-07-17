@@ -136,11 +136,14 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
               action.text = textController.text;
               try {
                 await ref.read(actionStateProvider.notifier).addOrEditAction(
-                    action, (_connectionStatus[0] != ConnectivityResult.none),);
+                      action,
+                      (_connectionStatus[0] != ConnectivityResult.none),
+                    );
               } on NotValidRevisionException catch (e) {
                 messenger.toastButton(e.toString(), () {
                   ref.read(actionStateProvider.notifier).synchronizeList(
-                      (_connectionStatus[0] != ConnectivityResult.none),);
+                        (_connectionStatus[0] != ConnectivityResult.none),
+                      );
                 });
               } on NotExistActionException catch (e) {
                 messenger.toast(e.toString());
@@ -152,10 +155,9 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                 messenger.toast(e.toString());
               }
               AppLogger.d("Navigator pop from AddActionPage");
-              if(context.mounted){
+              if (context.mounted) {
                 context.pop();
               }
-
             },
             child: Text(
               AppLocalizations.of(context).save,
@@ -290,12 +292,14 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                 AppLogger.d("Delete action.id: ${action.id}");
                 try {
                   await ref.read(actionStateProvider.notifier).deleteAction(
-                      action,
-                      (_connectionStatus[0] != ConnectivityResult.none),);
+                        action,
+                        (_connectionStatus[0] != ConnectivityResult.none),
+                      );
                 } on NotValidRevisionException catch (e) {
                   messenger.toastButton(e.toString(), () {
                     ref.read(actionStateProvider.notifier).synchronizeList(
-                        (_connectionStatus[0] != ConnectivityResult.none),);
+                          (_connectionStatus[0] != ConnectivityResult.none),
+                        );
                   });
                 } on NotExistActionException catch (e) {
                   messenger.toast(e.toString());
@@ -307,7 +311,7 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
                   messenger.toast(e.toString());
                 }
                 AppLogger.d("Navigator pop from AddActionPage");
-                if(context.mounted){
+                if (context.mounted) {
                   context.pop();
                 }
               },
@@ -325,6 +329,7 @@ class AddActionPageState extends ConsumerState<AddActionPage> {
       ),
     );
   }
+
   @override
   dispose() {
     _connectivitySubscription.cancel();

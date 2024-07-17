@@ -115,13 +115,15 @@ class _ActionTileState extends ConsumerState<ActionTile> {
           AppLogger.d("Mark done action.id: ${widget.action.id}");
           try {
             await ref.read(actionStateProvider.notifier).markDoneOrNot(
-                widget.action,
-                true,
-                (_connectionStatus[0] != ConnectivityResult.none),);
+                  widget.action,
+                  true,
+                  (_connectionStatus[0] != ConnectivityResult.none),
+                );
           } on NotValidRevisionException catch (e) {
             messenger.toastButton(e.toString(), () {
               ref.read(actionStateProvider.notifier).synchronizeList(
-                  (_connectionStatus[0] != ConnectivityResult.none),);
+                    (_connectionStatus[0] != ConnectivityResult.none),
+                  );
             });
           } on NotExistActionException catch (e) {
             messenger.toast(e.toString());
@@ -143,12 +145,14 @@ class _ActionTileState extends ConsumerState<ActionTile> {
           AppLogger.d("Delete action.id: ${widget.action.id}");
           try {
             await ref.read(actionStateProvider.notifier).deleteAction(
-                widget.action,
-                (_connectionStatus[0] != ConnectivityResult.none),);
+                  widget.action,
+                  (_connectionStatus[0] != ConnectivityResult.none),
+                );
           } on NotValidRevisionException catch (e) {
             messenger.toastButton(e.toString(), () {
               ref.read(actionStateProvider.notifier).synchronizeList(
-                  (_connectionStatus[0] != ConnectivityResult.none),);
+                    (_connectionStatus[0] != ConnectivityResult.none),
+                  );
             });
           } on NotExistActionException catch (e) {
             messenger.toast(e.toString());
@@ -174,13 +178,15 @@ class _ActionTileState extends ConsumerState<ActionTile> {
           onChanged: (bool? value) async {
             try {
               await ref.read(actionStateProvider.notifier).markDoneOrNot(
-                  widget.action,
-                  !widget.action.done,
-                  (_connectionStatus[0] != ConnectivityResult.none),);
+                    widget.action,
+                    !widget.action.done,
+                    (_connectionStatus[0] != ConnectivityResult.none),
+                  );
             } on NotValidRevisionException catch (e) {
               messenger.toastButton(e.toString(), () {
                 ref.read(actionStateProvider.notifier).synchronizeList(
-                    (_connectionStatus[0] != ConnectivityResult.none),);
+                      (_connectionStatus[0] != ConnectivityResult.none),
+                    );
               });
             } on NotExistActionException catch (e) {
               messenger.toast(e.toString());
@@ -236,14 +242,18 @@ class _ActionTileState extends ConsumerState<ActionTile> {
             AppLogger.d(
               "Navigator push AddActionPage with action.id: ${widget.action.id}",
             );
-            context.goNamed("task", pathParameters: {
-              'id': widget.action.id,
-            },);
+            context.goNamed(
+              "task",
+              pathParameters: {
+                'id': widget.action.id,
+              },
+            );
           },
         ),
       ),
     );
   }
+
   @override
   dispose() {
     _connectivitySubscription.cancel();

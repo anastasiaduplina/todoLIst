@@ -94,7 +94,7 @@ void main() {
     await actionsDao.addAction(actionDto1);
     await actionsDao.addAction(actionDto2);
     actionDto2.text = "vrbrtr";
-    List<ActionDto> updatedList = [actionDto1,actionDto2,actionDto3];
+    List<ActionDto> updatedList = [actionDto1, actionDto2, actionDto3];
     await actionsDao.updateList(updatedList);
 
     list = await actionsDao.getAll();

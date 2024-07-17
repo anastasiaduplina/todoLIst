@@ -40,6 +40,23 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+
+    flavorDimensions "release-type"
+
+    productFlavors {
+        dev {
+            dimension "release-type"
+            applicationIdSuffix  ".dev"
+            versionNameSuffix "-dev"
+            resValue "string", "app_name", "todoList-dev"
+        }
+
+        prod {
+            dimension "release-type"
+            resValue "string", "app_name", "todoList"
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.todo_list_app"

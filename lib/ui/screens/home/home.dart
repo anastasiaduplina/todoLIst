@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo_list_app/ui/providers/action_provider.dart';
+import 'package:todo_list_app/ui/providers/theme/theme_provider.dart';
 import 'package:todo_list_app/ui/screens/home/widgets/action_list_tile.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:todo_list_app/utils/logger.dart';
@@ -73,6 +74,7 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     List<ActionToDo> items = ref.watch(actionStateProvider).valueOrNull ?? [];
+    bool isDark = ref.watch(themeStateProvider);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: CustomScrollView(
@@ -87,9 +89,20 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
             shadowColor: theme.shadowColor,
             surfaceTintColor: theme.cardColor,
             actions: [
-              (_connectionStatus[0] == ConnectivityResult.none)
-                  ? const Icon(Icons.wifi_off)
-                  : const Icon(Icons.wifi),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: (_connectionStatus[0] == ConnectivityResult.none)
+                    ? const Icon(Icons.wifi_off)
+                    : const Icon(Icons.wifi),
+              ),
+              IconButton(
+                onPressed: () {
+                  ref.read(themeStateProvider.notifier).changeTheme();
+                },
+                icon: isDark
+                    ? const Icon(Icons.nightlight)
+                    : const Icon(Icons.sunny),
+              ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               title: Row(
@@ -176,9 +189,12 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
                               // TODO(nastya): быстрое добавление
                               //  пока перекидывает на обычную страницу добавления
                               AppLogger.d("Push AddAction Page");
-                              context.goNamed("task", pathParameters: {
-                                'id': "-1",
-                              },);
+                              context.goNamed(
+                                "task",
+                                pathParameters: {
+                                  'id': "-1",
+                                },
+                              );
                             },
                             decoration: InputDecoration(
                               border: InputBorder.none,
@@ -202,14 +218,18 @@ class MyHomePageState extends ConsumerState<MyHomePage> {
         shape: const CircleBorder(),
         onPressed: () {
           AppLogger.d("Push AddAction Page");
-          context.goNamed("task", pathParameters: {
-            'id': "-1",
-          },);
+          context.goNamed(
+            "task",
+            pathParameters: {
+              'id': "-1",
+            },
+          );
         },
         child: const Icon(Icons.add),
       ),
     );
   }
+
   @override
   dispose() {
     _connectivitySubscription.cancel();
