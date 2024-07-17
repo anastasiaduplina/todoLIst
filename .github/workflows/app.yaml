@@ -23,8 +23,3 @@ jobs:
       - run: flutter test --dart-define=TOKEN=${{ secrets.TOKEN }}
 
       - run: flutter build apk --flavor prod --dart-define=TOKEN=${{ secrets.TOKEN }}
-
-      - uses: actions/upload-artifact@v1
-        with:
-          name: release-apk
-          path: build/app/outputs/apk/release/app-release.apk
