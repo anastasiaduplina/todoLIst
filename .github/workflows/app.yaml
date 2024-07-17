@@ -22,7 +22,7 @@ jobs:
 
       - run: flutter test --dart-define=TOKEN=${{ secrets.TOKEN }}
 
-      - run: flutter build apk
+      - run: flutter build apk --flavor prod --dart-define=TOKEN=${{ secrets.TOKEN }}
 
       - uses: actions/upload-artifact@v1
         with:
