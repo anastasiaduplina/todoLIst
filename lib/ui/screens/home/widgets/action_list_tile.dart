@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,9 +23,11 @@ class ActionTile extends ConsumerStatefulWidget {
   const ActionTile({
     super.key,
     required this.action,
+    required this.confettiController,
   });
 
   final ActionToDo action;
+  final ConfettiController confettiController;
 
   @override
   ConsumerState<ActionTile> createState() => _ActionTileState();
@@ -33,6 +37,7 @@ class _ActionTileState extends ConsumerState<ActionTile> {
   List<ConnectivityResult> _connectionStatus = [ConnectivityResult.none];
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+
   @override
   void initState() {
     super.initState();
@@ -113,6 +118,13 @@ class _ActionTileState extends ConsumerState<ActionTile> {
         AppLogger.d("Swipe direction: $direction");
         if (direction == DismissDirection.startToEnd) {
           AppLogger.d("Mark done action.id: ${widget.action.id}");
+          FirebaseAnalytics.instance.logEvent(
+            name: 'checkbox',
+            parameters: {
+              'action': widget.action.id,
+            },
+          );
+          widget.confettiController.play();
           try {
             await ref.read(actionStateProvider.notifier).markDoneOrNot(
                   widget.action,
@@ -143,6 +155,12 @@ class _ActionTileState extends ConsumerState<ActionTile> {
       onDismissed: (direction) async {
         if (direction == DismissDirection.endToStart) {
           AppLogger.d("Delete action.id: ${widget.action.id}");
+          FirebaseAnalytics.instance.logEvent(
+            name: 'delete',
+            parameters: {
+              'action': widget.action.id,
+            },
+          );
           try {
             await ref.read(actionStateProvider.notifier).deleteAction(
                   widget.action,
@@ -176,6 +194,10 @@ class _ActionTileState extends ConsumerState<ActionTile> {
             width: 2,
           ),
           onChanged: (bool? value) async {
+            if (!widget.action.done) {
+              widget.confettiController.play();
+            }
+
             try {
               await ref.read(actionStateProvider.notifier).markDoneOrNot(
                     widget.action,
@@ -198,6 +220,12 @@ class _ActionTileState extends ConsumerState<ActionTile> {
               messenger.toast(e.toString());
             }
             AppLogger.d("Mark done action.id: ${widget.action.id}");
+            FirebaseAnalytics.instance.logEvent(
+              name: 'checkbox',
+              parameters: {
+                'action': widget.action.id,
+              },
+            );
           },
         ),
         title: Column(
@@ -241,6 +269,13 @@ class _ActionTileState extends ConsumerState<ActionTile> {
           onPressed: () {
             AppLogger.d(
               "Navigator push AddActionPage with action.id: ${widget.action.id}",
+            );
+            FirebaseAnalytics.instance.logEvent(
+              name: 'push',
+              parameters: {
+                'pageFrom': 'home',
+                'pageTo': 'addAction',
+              },
             );
             context.goNamed(
               "task",
