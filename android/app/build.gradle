@@ -1,5 +1,9 @@
 plugins {
     id "com.android.application"
+    // START: FlutterFire Configuration
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+    // END: FlutterFire Configuration
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -38,6 +42,23 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+    }
+
+
+    flavorDimensions "release-type"
+
+    productFlavors {
+        dev {
+            dimension "release-type"
+            applicationIdSuffix  ".dev"
+            versionNameSuffix "-dev"
+            resValue "string", "app_name", "todoList-dev"
+        }
+
+        prod {
+            dimension "release-type"
+            resValue "string", "app_name", "todoList"
+        }
     }
 
     defaultConfig {
