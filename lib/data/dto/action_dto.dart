@@ -50,22 +50,35 @@ class ActionDto {
 
   Map<String, dynamic> toJson() => _$ActionDtoToJson(this);
 
+  // elegant form of the equality operator overriding
   @override
   bool operator ==(Object other) {
-    if (other is! ActionDto) return false;
-    if (id != other.id) return false;
-    if (text != other.text) return false;
-    if (done != other.done) return false;
-    if (deadline != other.deadline) return false;
-    if (color != other.color) return false;
-    if (changedAt != other.changedAt) return false;
-    if (createdAt != other.createdAt) return false;
-    if (lastUpdatedBy != other.lastUpdatedBy) return false;
-    return true;
+    return (identical(this, other) ||
+           ((other is ActionDto)&&
+            (id == other.id)&&
+            (text == other.text)&&
+            (done == other.done)&&
+            (deadline == other.deadline)&&
+            (color == other.color)&&
+            (changedAt == other.changedAt)&&
+            (createdAt == other.createdAt)&&
+            (lastUpdatedBy == other.lastUpdatedBy)
+           )
+           );
   }
 
+  // hashCode getter should be overriden, using exclusive operatort helps uniquly indentifying the instance(exclusive operator should be used to merge hashCodes of attributes composited inside the object).
   @override
-  int get hashCode => text.hashCode;
+  int get hashCode => id.hashCode ^
+    text.hashCode ^ 
+    done.hashCode ^
+    deadLine.hashCode ^
+    importance.hashCode ^
+    color.hashCode ^
+    createdAt.hashCode ^
+    changedAt.hashCode ^
+    lastUpdatedBy.hashCode;
+  
 }
 
 enum ImportanceDto {
